@@ -1,6 +1,7 @@
 import React , { useEffect, useState } from 'react';
 import { Input } from '@rocketseat/unform';
 import { Link } from "react-router-dom";
+import Modali, { useModali } from 'modali';
 
 import { Container, Log, ButtonApagar, ButtonArquivar, ContainerPaginacao } from './styles'
 import DetailItemColor from '../../components/DetailItemColor'
@@ -13,6 +14,8 @@ const Dashboard = (props) => {
    const [filtro, setFiltro] = useState("default");
    const [ordenacao, setOrdenacao] = useState("default");   
    const [busca, setBusca] = useState("default");
+   const [currentLog, setCurrentLog] = useState(0);
+
 
    useEffect(() => {
      const token = localStorage.getItem("central-erros-auth-token");
@@ -22,7 +25,6 @@ const Dashboard = (props) => {
    },[]);
  
    const getLogs = ( token, pagina) => {
-     //https://centralerrosapp.herokuapp.com
       fetch(`https://centralerrosapp.herokuapp.com/paglogs/${pagina}/${token}`)
       .then(function(response){
         return response.text();
@@ -167,6 +169,51 @@ const Dashboard = (props) => {
       }
     }
 
+    const [deletar, toggleExcluir] = useModali({
+      animated: true,
+      title: 'Confirmar',
+      message: 'Deseja excluir este Log de Erro?',
+      buttons: [
+        <Modali.Button
+          label="Cancelar"
+          isStyleCancel
+          onClick={() =>{ toggleExcluir() }}
+        />,
+        <Modali.Button
+          label="Excluir"
+          isStyleDestructive
+          onClick={ () => {
+                            handleDeletar(currentLog);
+                            setCurrentLog(0);
+                            toggleExcluir();
+                  }}
+        />,
+      ],
+    });
+
+    const [arquivar, toggleArquivar] = useModali({
+      animated: true,
+      title: 'Confirmar',
+      message: 'Deseja arquivar este Log de Erro?',
+      buttons: [
+        <Modali.Button
+          label="Cancelar"
+          isStyleCancel
+          onClick={() =>{ toggleArquivar() }}
+        />,
+        <Modali.Button
+          label="Arquivar"
+          isStyleDestructive
+          onClick={ () => {
+                            handleArquivar(currentLog);
+                            setCurrentLog(0);
+                            toggleArquivar();
+                  }}
+        />,
+      ],
+    });
+
+
    return (
    <Container>
          <header>
@@ -219,8 +266,10 @@ const Dashboard = (props) => {
                   </div>  
 
                   <div className="right">
-                    <ButtonArquivar type="button" onClick={() => handleArquivar(log.id)}>Arquivar</ButtonArquivar>
-                    <ButtonApagar type="button" onClick={() => handleDeletar(log.id)}>Deletar</ButtonApagar>
+                    <ButtonArquivar type="button" onClick={() => { toggleArquivar(); setCurrentLog(log.id) }}>Arquivar</ButtonArquivar>
+                    <Modali.Modal {...arquivar} />
+                    <ButtonApagar type="button" onClick={() => { toggleExcluir(); setCurrentLog(log.id) }}>Deletar</ButtonApagar>
+                    <Modali.Modal {...deletar} />
                   </div>
                   </Log>         
                   );
